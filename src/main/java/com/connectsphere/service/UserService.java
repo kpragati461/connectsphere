@@ -1,6 +1,8 @@
 package com.connectsphere.service;
 
 import com.connectsphere.dto.RegisterRequest;
+import com.connectsphere.dto.UpdateProfileRequest;
+import com.connectsphere.dto.UserResponseDTO;
 import com.connectsphere.model.User;
 import com.connectsphere.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.connectsphere.model.Role;
+import com.connectsphere.dto.UpdateProfileRequest;
+import com.connectsphere.dto.UserResponseDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -54,4 +58,28 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found: " + username));
     }
+    public UserResponseDTO getProfile(String username) {
+    User user = findByUsername(username);
+    return mapToDTO(user);
+}
+
+public UserResponseDTO updateProfile(String username, UpdateProfileRequest req) {
+    User user = findByUsername(username);
+    if (req.getBio() != null) user.setBio(req.getBio());
+    if (req.getProfilePhoto() != null) user.setProfilePhoto(req.getProfilePhoto());
+    userRepository.save(user);
+    return mapToDTO(user);
+}
+
+private UserResponseDTO mapToDTO(User user) {
+    return new UserResponseDTO(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getBio(),
+            user.getProfilePhoto(),
+            user.getRole(),
+            user.getCreatedAt()
+    );
+}
 }
