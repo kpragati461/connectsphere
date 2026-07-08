@@ -8,15 +8,9 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponseDTO {
+public class CommentResponseDTO {
     private Long id;
     private String content;
-    private String mediaUrl;
     private String username;
-    private String profilePhoto;
     private LocalDateTime createdAt;
-    private LocalDateTime feedExpiresAt;
-    private long likeCount;
-    private long commentCount;
-    private boolean likedByCurrentUser;
 }

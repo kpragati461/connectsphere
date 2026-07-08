@@ -28,8 +28,9 @@ public class PostController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<List<PostResponseDTO>> getFeed() {
-        return ResponseEntity.ok(postService.getFeed());
+    public ResponseEntity<List<PostResponseDTO>> getFeed(
+        @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(postService.getFeed(userDetails.getUsername()));
     }
 
     @GetMapping("/user/{username}")
