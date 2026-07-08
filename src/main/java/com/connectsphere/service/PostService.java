@@ -8,6 +8,7 @@ import com.connectsphere.repository.CommentRepository;
 import com.connectsphere.repository.LikeRepository;
 import com.connectsphere.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,30 +23,32 @@ public class PostService {
     private final UserService userService;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final FollowService followService;
 
     public PostResponseDTO createPost(String username, CreatePostRequest req) {
         User user = userService.findByUsername(username);
-
         Post post = Post.builder()
                 .content(req.getContent())
                 .mediaUrl(req.getMediaUrl())
                 .user(user)
                 .build();
-
         return mapToDTO(postRepository.save(post), username);
     }
 
     public List<PostResponseDTO> getFeed(String username) {
+        List<String> following = followService.getFollowingUsernames(username);
+        following.add(username); // include own posts
+
         return postRepository
                 .findByFeedExpiresAtAfterOrderByCreatedAtDesc(LocalDateTime.now())
                 .stream()
+                .filter(post -> following.contains(post.getUser().getUsername()))
                 .map(post -> mapToDTO(post, username))
                 .collect(Collectors.toList());
     }
 
     public List<PostResponseDTO> getUserPosts(String username) {
         User user = userService.findByUsername(username);
-
         return postRepository.findByUserOrderByCreatedAtDesc(user)
                 .stream()
                 .map(post -> mapToDTO(post, username))
@@ -55,15 +58,21 @@ public class PostService {
     public void deletePost(Long postId, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-
-        if (!post.getUser().getUsername().equals(username)) {
+        if (!post.getUser().getUsername().equals(username))
             throw new RuntimeException("You can only delete your own posts");
-        }
-
         postRepository.delete(post);
     }
 
     private PostResponseDTO mapToDTO(Post post, String username) {
+        boolean liked = false;
+        if (username != null) {
+            try {
+                User user = userService.findByUsername(username);
+                liked = likeRepository.existsByUserAndPost(user, post);
+            } catch (Exception e) {
+                liked = false;
+            }
+        }
         return new PostResponseDTO(
                 post.getId(),
                 post.getContent(),
@@ -74,11 +83,7 @@ public class PostService {
                 post.getFeedExpiresAt(),
                 likeRepository.countByPost(post),
                 commentRepository.countByPost(post),
-                username != null &&
-                        likeRepository.existsByUserAndPost(
-                                userService.findByUsername(username),
-                                post
-                        )
+                liked
         );
     }
 }
