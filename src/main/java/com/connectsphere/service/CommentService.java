@@ -9,6 +9,7 @@ import com.connectsphere.repository.CommentRepository;
 import com.connectsphere.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.connectsphere.model.NotificationType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public CommentResponseDTO addComment(Long postId, String username,
                                          CreateCommentRequest req) {
@@ -33,7 +35,15 @@ public class CommentService {
                 .post(post)
                 .build();
 
-        return mapToDTO(commentRepository.save(comment));
+        Comment saved = commentRepository.save(comment);
+
+        notificationService.createNotification(
+        post.getUser().getUsername(),
+        username,
+        NotificationType.COMMENT,
+        postId);
+
+        return mapToDTO(saved);
     }
 
     public List<CommentResponseDTO> getComments(Long postId) {
