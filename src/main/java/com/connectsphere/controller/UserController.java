@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import java.util.Map;
 
@@ -52,4 +53,11 @@ public class UserController {
                 userDetails.getUsername(), username);
         return ResponseEntity.ok(Map.of("followed", followed));
     }
+    @GetMapping("/search")
+        public ResponseEntity<List<UserResponseDTO>> searchUsers(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestParam String query) {
+         return ResponseEntity.ok(
+            userService.searchUsers(query, userDetails.getUsername()));
+}
 }

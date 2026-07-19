@@ -6,6 +6,10 @@ import com.connectsphere.dto.UserResponseDTO;
 import com.connectsphere.model.Role;
 import com.connectsphere.model.User;
 import com.connectsphere.repository.UserRepository;
+
+import java.util.stream.Collectors;
+import java.util.List;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -106,4 +110,10 @@ public class UserService implements UserDetailsService {
                         followService.isFollowing(currentUsername, user.getUsername())
         );
     }
+    public List<UserResponseDTO> searchUsers(String query, String currentUsername) {
+    return userRepository.findByUsernameContainingIgnoreCase(query)
+            .stream()
+            .map(user -> mapToDTO(user, currentUsername))
+            .collect(Collectors.toList());
+}
 }

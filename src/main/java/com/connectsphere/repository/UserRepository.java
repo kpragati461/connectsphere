@@ -1,4 +1,5 @@
 package com.connectsphere.repository;
+import java.util.List;
 
 import com.connectsphere.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,4 +10,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+    List<User> findByUsernameContainingIgnoreCase(String query);
 }
