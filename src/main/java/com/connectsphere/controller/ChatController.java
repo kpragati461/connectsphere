@@ -4,7 +4,11 @@ import com.connectsphere.dto.ConversationResponseDTO;
 import com.connectsphere.dto.MessageResponseDTO;
 import com.connectsphere.dto.SendMessageRequest;
 import com.connectsphere.model.Conversation;
+import com.connectsphere.model.NotificationType;
 import com.connectsphere.service.ChatService;
+import com.connectsphere.service.NotificationService;
+import com.connectsphere.model.NotificationType;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +29,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationService notificationService;
 
     // REST — get all conversations
     @GetMapping("/api/conversations")
@@ -53,7 +58,6 @@ public class ChatController {
                 chatService.getMessages(conversationId, userDetails.getUsername()));
     }
 
-    // WebSocket — send a message
     @PostMapping("/api/conversations/{conversationId}/messages")
 public ResponseEntity<MessageResponseDTO> sendMessage(
         @AuthenticationPrincipal UserDetails userDetails,
@@ -66,6 +70,16 @@ public ResponseEntity<MessageResponseDTO> sendMessage(
     // broadcast to WebSocket subscribers
     messagingTemplate.convertAndSend(
             "/topic/conversation." + conversationId, message);
+
+    // notify the other user
+    String recipientUsername = chatService
+            .getOtherUsername(conversationId, userDetails.getUsername());
+
+    notificationService.createNotification(
+            recipientUsername,
+            userDetails.getUsername(),
+            NotificationType.MESSAGE,
+            null);
 
     return ResponseEntity.ok(message);
 }

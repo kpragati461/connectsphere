@@ -101,4 +101,11 @@ public class ChatService {
                 message.getCreatedAt()
         );
     }
+    public String getOtherUsername(Long conversationId, String currentUsername) {
+    Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new RuntimeException("Conversation not found"));
+    return conversation.getUser1().getUsername().equals(currentUsername)
+            ? conversation.getUser2().getUsername()
+            : conversation.getUser1().getUsername();
+}
 }

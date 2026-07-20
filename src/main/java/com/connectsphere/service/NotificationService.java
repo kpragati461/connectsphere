@@ -58,11 +58,11 @@ public class NotificationService {
 
     private NotificationResponseDTO mapToDTO(Notification n) {
         String message = switch (n.getType()) {
-            case LIKE    -> n.getActor().getUsername() + " liked your post";
-            case COMMENT -> n.getActor().getUsername() + " commented on your post";
-            case FOLLOW  -> n.getActor().getUsername() + " started following you";
-        };
-
+    case LIKE    -> n.getActor().getUsername() + " liked your post";
+    case COMMENT -> n.getActor().getUsername() + " commented on your post";
+    case FOLLOW  -> n.getActor().getUsername() + " started following you";
+    case MESSAGE -> n.getActor().getUsername() + " sent you a message";
+};
         return new NotificationResponseDTO(
                 n.getId(),
                 n.getActor().getUsername(),
