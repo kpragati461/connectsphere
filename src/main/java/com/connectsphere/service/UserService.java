@@ -35,20 +35,24 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+public UserDetails loadUserByUsername(String username)
+        throws UsernameNotFoundException {
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found: " + username));
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                    "User not found: " + username));
 
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .roles(user.getRole().name())
-                .build();
+    if (user.isBanned()) {
+        throw new UsernameNotFoundException(
+                "Your account has been banned");
     }
 
+    return org.springframework.security.core.userdetails.User
+            .withUsername(user.getUsername())
+            .password(user.getPassword())
+            .roles(user.getRole().name())
+            .build();
+}
     public User registerUser(RegisterRequest req) {
 
         if (userRepository.existsByUsername(req.getUsername()))
@@ -94,22 +98,22 @@ public class UserService implements UserDetailsService {
         return mapToDTO(user, username);
     }
 
-    // Updated
     private UserResponseDTO mapToDTO(User user, String currentUsername) {
-        return new UserResponseDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getBio(),
-                user.getProfilePhoto(),
-                user.getRole(),
-                user.getCreatedAt(),
-                followService.getFollowerCount(user),
-                followService.getFollowingCount(user),
-                currentUsername != null &&
-                        followService.isFollowing(currentUsername, user.getUsername())
-        );
-    }
+    return new UserResponseDTO(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getBio(),
+            user.getProfilePhoto(),
+            user.getRole(),
+            user.getCreatedAt(),
+            followService.getFollowerCount(user),
+            followService.getFollowingCount(user),
+            currentUsername != null &&
+                    followService.isFollowing(currentUsername, user.getUsername()),
+            user.isBanned()
+    );
+}
     public List<UserResponseDTO> searchUsers(String query, String currentUsername) {
     return userRepository.findByUsernameContainingIgnoreCase(query)
             .stream()

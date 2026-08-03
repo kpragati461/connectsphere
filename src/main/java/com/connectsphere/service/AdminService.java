@@ -30,23 +30,24 @@ public class AdminService {
         );
     }
 
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(user -> new UserResponseDTO(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.getBio(),
-                        user.getProfilePhoto(),
-                        user.getRole(),
-                        user.getCreatedAt(),
-                        followService.getFollowerCount(user),
-                        followService.getFollowingCount(user),
-                        false
-                ))
-                .collect(Collectors.toList());
-    }
+   public List<UserResponseDTO> getAllUsers() {
+    return userRepository.findAll()
+            .stream()
+            .map(user -> new UserResponseDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getBio(),
+                    user.getProfilePhoto(),
+                    user.getRole(),
+                    user.getCreatedAt(),
+                    followService.getFollowerCount(user),
+                    followService.getFollowingCount(user),
+                    false,
+                    user.isBanned()
+            ))
+            .collect(Collectors.toList());
+}
 
     public void banUser(Long userId) {
         User user = userRepository.findById(userId)
