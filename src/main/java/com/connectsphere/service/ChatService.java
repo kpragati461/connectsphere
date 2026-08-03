@@ -5,9 +5,11 @@ import com.connectsphere.dto.MessageResponseDTO;
 import com.connectsphere.dto.SendMessageRequest;
 import com.connectsphere.model.Conversation;
 import com.connectsphere.model.Message;
+import com.connectsphere.model.Post;
 import com.connectsphere.model.User;
 import com.connectsphere.repository.ConversationRepository;
 import com.connectsphere.repository.MessageRepository;
+import com.connectsphere.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class ChatService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final PostRepository postRepository;
     private final UserService userService;
 
     // get or create conversation between two users
@@ -42,10 +45,37 @@ public class ChatService {
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         User sender = userService.findByUsername(senderUsername);
 
+        String content = req.getContent();
+        Long sharedPostId = req.getSharedPostId();
+        if ((content == null || content.isBlank()) && sharedPostId == null) {
+            throw new RuntimeException("Message content is required");
+        }
+        if (sharedPostId != null) {
+            content = (content != null && !content.isBlank()) ? content : "Shared a post";
+        }
+
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(req.getContent())
+                .content(content)
+                .sharedPostId(sharedPostId)
+                .build();
+
+        return mapToDTO(messageRepository.save(message));
+    }
+
+    public MessageResponseDTO sharePost(Long conversationId, String senderUsername, Long postId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        User sender = userService.findByUsername(senderUsername);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        Message message = Message.builder()
+                .conversation(conversation)
+                .sender(sender)
+                .content("Shared a post: " + post.getContent())
+                .sharedPostId(post.getId())
                 .build();
 
         return mapToDTO(messageRepository.save(message));
@@ -98,7 +128,8 @@ public class ChatService {
                 message.getSender().getUsername(),
                 message.getContent(),
                 message.isRead(),
-                message.getCreatedAt()
+                message.getCreatedAt(),
+                message.getSharedPostId()
         );
     }
     public String getOtherUsername(Long conversationId, String currentUsername) {

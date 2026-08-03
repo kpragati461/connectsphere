@@ -15,4 +15,5 @@ public class MessageResponseDTO {
     private String content;
     private boolean read;
     private LocalDateTime createdAt;
+    private Long sharedPostId;
 }

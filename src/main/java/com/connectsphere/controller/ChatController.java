@@ -7,7 +7,6 @@ import com.connectsphere.model.Conversation;
 import com.connectsphere.model.NotificationType;
 import com.connectsphere.service.ChatService;
 import com.connectsphere.service.NotificationService;
-import com.connectsphere.model.NotificationType;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,28 +58,50 @@ public class ChatController {
     }
 
     @PostMapping("/api/conversations/{conversationId}/messages")
-public ResponseEntity<MessageResponseDTO> sendMessage(
-        @AuthenticationPrincipal UserDetails userDetails,
-        @PathVariable Long conversationId,
-        @Valid @RequestBody SendMessageRequest req) {
+    public ResponseEntity<MessageResponseDTO> sendMessage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long conversationId,
+            @Valid @RequestBody SendMessageRequest req) {
 
-    MessageResponseDTO message = chatService.saveMessage(
-            conversationId, userDetails.getUsername(), req);
+        MessageResponseDTO message = chatService.saveMessage(
+                conversationId, userDetails.getUsername(), req);
 
-    // broadcast to WebSocket subscribers
-    messagingTemplate.convertAndSend(
-            "/topic/conversation." + conversationId, message);
+        messagingTemplate.convertAndSend(
+                "/topic/conversation." + conversationId, message);
 
-    // notify the other user
-    String recipientUsername = chatService
-            .getOtherUsername(conversationId, userDetails.getUsername());
+        String recipientUsername = chatService
+                .getOtherUsername(conversationId, userDetails.getUsername());
 
-    notificationService.createNotification(
-            recipientUsername,
-            userDetails.getUsername(),
-            NotificationType.MESSAGE,
-            null);
+        notificationService.createNotification(
+                recipientUsername,
+                userDetails.getUsername(),
+                NotificationType.MESSAGE,
+                null);
 
-    return ResponseEntity.ok(message);
-}
+        return ResponseEntity.ok(message);
+    }
+
+    @PostMapping("/api/conversations/{conversationId}/share-post/{postId}")
+    public ResponseEntity<MessageResponseDTO> sharePost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long conversationId,
+            @PathVariable Long postId) {
+
+        MessageResponseDTO message = chatService.sharePost(
+                conversationId, userDetails.getUsername(), postId);
+
+        messagingTemplate.convertAndSend(
+                "/topic/conversation." + conversationId, message);
+
+        String recipientUsername = chatService
+                .getOtherUsername(conversationId, userDetails.getUsername());
+
+        notificationService.createNotification(
+                recipientUsername,
+                userDetails.getUsername(),
+                NotificationType.MESSAGE,
+                null);
+
+        return ResponseEntity.ok(message);
+    }
 }

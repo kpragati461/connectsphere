@@ -34,4 +34,7 @@ public class Message {
     @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "shared_post_id")
+    private Long sharedPostId;
 }

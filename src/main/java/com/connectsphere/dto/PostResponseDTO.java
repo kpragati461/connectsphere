@@ -19,4 +19,5 @@ public class PostResponseDTO {
     private long likeCount;
     private long commentCount;
     private boolean likedByCurrentUser;
+    private boolean bookmarkedByCurrentUser;
 }

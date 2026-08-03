@@ -4,6 +4,7 @@ import com.connectsphere.dto.CreatePostRequest;
 import com.connectsphere.dto.PostResponseDTO;
 import com.connectsphere.model.Post;
 import com.connectsphere.model.User;
+import com.connectsphere.repository.BookmarkRepository;
 import com.connectsphere.repository.CommentRepository;
 import com.connectsphere.repository.LikeRepository;
 import com.connectsphere.repository.PostRepository;
@@ -23,6 +24,7 @@ public class PostService {
     private final UserService userService;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final FollowService followService;
 
     public PostResponseDTO createPost(String username, CreatePostRequest req) {
@@ -65,12 +67,15 @@ public class PostService {
 
     private PostResponseDTO mapToDTO(Post post, String username) {
         boolean liked = false;
+        boolean bookmarked = false;
         if (username != null) {
             try {
                 User user = userService.findByUsername(username);
                 liked = likeRepository.existsByUserAndPost(user, post);
+                bookmarked = bookmarkRepository.existsByUserAndPost(user, post);
             } catch (Exception e) {
                 liked = false;
+                bookmarked = false;
             }
         }
         return new PostResponseDTO(
@@ -83,7 +88,8 @@ public class PostService {
                 post.getFeedExpiresAt(),
                 likeRepository.countByPost(post),
                 commentRepository.countByPost(post),
-                liked
+                liked,
+                bookmarked
         );
     }
 }
