@@ -120,4 +120,12 @@ public UserDetails loadUserByUsername(String username)
             .map(user -> mapToDTO(user, currentUsername))
             .collect(Collectors.toList());
 }
+
+    // NEW — profiles of everyone `username` follows, for the share-to-DM picker.
+    public List<UserResponseDTO> getFollowing(String username) {
+        return followService.getFollowingUsers(username)
+                .stream()
+                .map(u -> mapToDTO(u, username))
+                .collect(Collectors.toList());
+    }
 }

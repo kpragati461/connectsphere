@@ -60,4 +60,12 @@ public class UserController {
          return ResponseEntity.ok(
             userService.searchUsers(query, userDetails.getUsername()));
 }
+
+    // NEW — powers the "Share to..." picker (Instagram-style send-to-DM sheet).
+    @GetMapping("/following")
+    public ResponseEntity<List<UserResponseDTO>> getFollowing(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                userService.getFollowing(userDetails.getUsername()));
+    }
 }

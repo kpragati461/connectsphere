@@ -74,4 +74,14 @@ public class FollowService {
                 .map(f -> f.getFollowing().getUsername())
                 .collect(Collectors.toList());
     }
+
+    // NEW — returns the full User objects (not just usernames) so the
+    // share-to-DM picker can show avatars/profile info without extra lookups.
+    public List<User> getFollowingUsers(String username) {
+        User user = userService.findByUsername(username);
+        return followRepository.findByFollower(user)
+                .stream()
+                .map(Follow::getFollowing)
+                .collect(Collectors.toList());
+    }
 }
