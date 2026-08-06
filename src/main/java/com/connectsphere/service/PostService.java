@@ -26,6 +26,7 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final BookmarkRepository bookmarkRepository;
     private final FollowService followService;
+    private final BlockService blockService;
 
     public PostResponseDTO createPost(String username, CreatePostRequest req) {
         User user = userService.findByUsername(username);
@@ -37,25 +38,27 @@ public class PostService {
         return mapToDTO(postRepository.save(post), username);
     }
 
-    public List<PostResponseDTO> getFeed(String username) {
-        List<String> following = followService.getFollowingUsernames(username);
-        following.add(username); // include own posts
+public List<PostResponseDTO> getFeed(String username) {
+    List<String> following = followService.getFollowingUsernames(username);
+    following.add(username);
 
-        return postRepository
-                .findByFeedExpiresAtAfterOrderByCreatedAtDesc(LocalDateTime.now())
-                .stream()
-                .filter(post -> following.contains(post.getUser().getUsername()))
-                .map(post -> mapToDTO(post, username))
-                .collect(Collectors.toList());
-    }
+    List<String> blocked = blockService.getBlockedUsernames(username);
 
-    public List<PostResponseDTO> getUserPosts(String username) {
-        User user = userService.findByUsername(username);
-        return postRepository.findByUserOrderByCreatedAtDesc(user)
-                .stream()
-                .map(post -> mapToDTO(post, username))
-                .collect(Collectors.toList());
-    }
+    return postRepository
+            .findByFeedExpiresAtAfterOrderByCreatedAtDesc(LocalDateTime.now())
+            .stream()
+            .filter(post -> following.contains(post.getUser().getUsername()))
+            .filter(post -> !blocked.contains(post.getUser().getUsername()))
+            .map(post -> mapToDTO(post, username))
+            .collect(Collectors.toList());
+}
+public List<PostResponseDTO> getUserPosts(String username) {
+    User user = userService.findByUsername(username);
+    return postRepository.findByUserOrderByCreatedAtDesc(user)
+            .stream()
+            .map(post -> mapToDTO(post, username))
+            .collect(Collectors.toList());
+}
 
     public void deletePost(Long postId, String username) {
         Post post = postRepository.findById(postId)

@@ -24,15 +24,18 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    @Lazy
+    private final BlockService blockService;
 
-    // Manual constructor (replaces @RequiredArgsConstructor)
-    public UserService(@Lazy FollowService followService,
-                       UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.followService = followService;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+   public UserService(UserRepository userRepository,
+                   PasswordEncoder passwordEncoder,
+                   @Lazy FollowService followService,
+                   @Lazy BlockService blockService) {
+    this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.followService = followService;
+    this.blockService = blockService;
+}
 
     @Override
 public UserDetails loadUserByUsername(String username)
@@ -115,12 +118,14 @@ public UserDetails loadUserByUsername(String username)
     );
 }
     public List<UserResponseDTO> searchUsers(String query, String currentUsername) {
+    List<String> blocked = blockService.getBlockedUsernames(currentUsername);
     return userRepository.findByUsernameContainingIgnoreCase(query)
             .stream()
+            .filter(user -> !blocked.contains(user.getUsername()))
+            .filter(user -> !user.getUsername().equals(currentUsername))
             .map(user -> mapToDTO(user, currentUsername))
             .collect(Collectors.toList());
 }
-
     // NEW — profiles of everyone `username` follows, for the share-to-DM picker.
     public List<UserResponseDTO> getFollowing(String username) {
         return followService.getFollowingUsers(username)
