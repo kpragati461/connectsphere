@@ -16,6 +16,7 @@ public class BlockService {
 
     private final BlockRepository blockRepository;
     private final UserService userService;
+    private final FollowService followService;
 
     public boolean toggleBlock(String blockerUsername, String blockedUsername) {
         if (blockerUsername.equals(blockedUsername))
@@ -26,6 +27,8 @@ public class BlockService {
 
         Optional<Block> existing = blockRepository
                 .findByBlockerAndBlocked(blocker, blocked);
+                if (blockerUsername.equals(blockedUsername))
+    throw new IllegalArgumentException("You cannot block yourself");
 
         if (existing.isPresent()) {
             blockRepository.delete(existing.get());
@@ -35,6 +38,12 @@ public class BlockService {
                     .blocker(blocker)
                     .blocked(blocked)
                     .build());
+
+            // NEW — a block should end any existing follow relationship in
+            // either direction, otherwise the "Following" button and
+            // follower/following counts go stale the moment you block someone.
+            followService.removeFollowRelationship(blockerUsername, blockedUsername);
+
             return true; // blocked
         }
     }
@@ -54,6 +63,17 @@ public class BlockService {
         return blockRepository.findByBlocker(blocker)
                 .stream()
                 .map(b -> b.getBlocked().getUsername())
+                .collect(Collectors.toList());
+    }
+
+    // NEW — the reverse of getBlockedUsernames: everyone who has blocked
+    // `username`. Needed so the feed can be filtered symmetrically — without
+    // this, a person you blocked could still see your posts in their own feed.
+    public List<String> getBlockedByUsernames(String username) {
+        User blocked = userService.findByUsername(username);
+        return blockRepository.findByBlocked(blocked)
+                .stream()
+                .map(b -> b.getBlocker().getUsername())
                 .collect(Collectors.toList());
     }
 }

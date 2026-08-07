@@ -119,17 +119,29 @@ public UserDetails loadUserByUsername(String username)
 }
     public List<UserResponseDTO> searchUsers(String query, String currentUsername) {
     List<String> blocked = blockService.getBlockedUsernames(currentUsername);
+    // NEW — also hide people who have blocked ME. Previously you could still
+    // find and view someone who'd blocked you, as long as you hadn't blocked
+    // them back.
+    List<String> blockedBy = blockService.getBlockedByUsernames(currentUsername);
     return userRepository.findByUsernameContainingIgnoreCase(query)
             .stream()
             .filter(user -> !blocked.contains(user.getUsername()))
+            .filter(user -> !blockedBy.contains(user.getUsername()))
             .filter(user -> !user.getUsername().equals(currentUsername))
             .map(user -> mapToDTO(user, currentUsername))
             .collect(Collectors.toList());
 }
-    // NEW — profiles of everyone `username` follows, for the share-to-DM picker.
+    // profiles of everyone `username` follows, for the share-to-DM picker.
     public List<UserResponseDTO> getFollowing(String username) {
+        // NEW — exclude blocked relationships in both directions. Previously
+        // a blocked user could still appear here, letting a block be bypassed
+        // entirely by sharing a post straight to their DMs.
+        List<String> blocked = blockService.getBlockedUsernames(username);
+        List<String> blockedBy = blockService.getBlockedByUsernames(username);
         return followService.getFollowingUsers(username)
                 .stream()
+                .filter(u -> !blocked.contains(u.getUsername()))
+                .filter(u -> !blockedBy.contains(u.getUsername()))
                 .map(u -> mapToDTO(u, username))
                 .collect(Collectors.toList());
     }

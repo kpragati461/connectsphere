@@ -96,19 +96,28 @@ public ResponseEntity<MessageResponseDTO> sendMessage(
 }
 
     @PostMapping("/api/conversations/{conversationId}/share-post/{postId}")
-    public ResponseEntity<MessageResponseDTO> sharePost(
+    public ResponseEntity<?> sharePost(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long conversationId,
             @PathVariable Long postId) {
+
+        // NEW — this endpoint had no block check at all, so sharing a post
+        // was a way to message a blocked user even when startConversation
+        // and sendMessage both correctly refused.
+        String recipientUsername = chatService
+                .getOtherUsername(conversationId, userDetails.getUsername());
+
+        if (blockService.isBlocked(userDetails.getUsername(), recipientUsername) ||
+            blockService.isBlocked(recipientUsername, userDetails.getUsername())) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", "You cannot share a post with this user"));
+        }
 
         MessageResponseDTO message = chatService.sharePost(
                 conversationId, userDetails.getUsername(), postId);
 
         messagingTemplate.convertAndSend(
                 "/topic/conversation." + conversationId, message);
-
-        String recipientUsername = chatService
-                .getOtherUsername(conversationId, userDetails.getUsername());
 
         notificationService.createNotification(
                 recipientUsername,

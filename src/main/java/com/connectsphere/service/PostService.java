@@ -43,12 +43,17 @@ public List<PostResponseDTO> getFeed(String username) {
     following.add(username);
 
     List<String> blocked = blockService.getBlockedUsernames(username);
+    // NEW — also exclude people who have blocked ME, not just people I blocked.
+    // Without this, someone I blocked could still see my posts in their own
+    // feed as long as they still followed me.
+    List<String> blockedBy = blockService.getBlockedByUsernames(username);
 
     return postRepository
             .findByFeedExpiresAtAfterOrderByCreatedAtDesc(LocalDateTime.now())
             .stream()
             .filter(post -> following.contains(post.getUser().getUsername()))
             .filter(post -> !blocked.contains(post.getUser().getUsername()))
+            .filter(post -> !blockedBy.contains(post.getUser().getUsername()))
             .map(post -> mapToDTO(post, username))
             .collect(Collectors.toList());
 }

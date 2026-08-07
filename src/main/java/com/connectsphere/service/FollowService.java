@@ -75,13 +75,24 @@ public class FollowService {
                 .collect(Collectors.toList());
     }
 
-    // NEW — returns the full User objects (not just usernames) so the
-    // share-to-DM picker can show avatars/profile info without extra lookups.
     public List<User> getFollowingUsers(String username) {
         User user = userService.findByUsername(username);
         return followRepository.findByFollower(user)
                 .stream()
                 .map(Follow::getFollowing)
                 .collect(Collectors.toList());
+    }
+
+    // NEW — called when a block is created, so the Follow relationship
+    // doesn't linger in either direction (stale "Following" button state,
+    // inflated follower/following counts).
+    public void removeFollowRelationship(String usernameA, String usernameB) {
+        User a = userService.findByUsername(usernameA);
+        User b = userService.findByUsername(usernameB);
+
+        followRepository.findByFollowerAndFollowing(a, b)
+                .ifPresent(followRepository::delete);
+        followRepository.findByFollowerAndFollowing(b, a)
+                .ifPresent(followRepository::delete);
     }
 }
