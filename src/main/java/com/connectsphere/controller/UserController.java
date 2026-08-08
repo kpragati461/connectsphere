@@ -1,9 +1,13 @@
 package com.connectsphere.controller;
 
+import com.connectsphere.dto.ChangePasswordRequest;
 import com.connectsphere.dto.UpdateProfileRequest;
 import com.connectsphere.dto.UserResponseDTO;
 import com.connectsphere.service.FollowService;
 import com.connectsphere.service.UserService;
+import com.connectsphere.dto.ChangePasswordRequest;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -85,4 +89,26 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.getFollowingOf(username, userDetails.getUsername()));
     }
+    @PostMapping("/me/change-password")
+    public ResponseEntity<?> changePassword(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @Valid @RequestBody ChangePasswordRequest req) {
+    try {
+        userService.changePassword(userDetails.getUsername(), req);
+        return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+}
+@PostMapping("/me/verify-password")
+public ResponseEntity<?> verifyPassword(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody Map<String, String> body) {
+    try {
+        userService.verifyCurrentPassword(userDetails.getUsername(), body.get("currentPassword"));
+        return ResponseEntity.ok(Map.of("valid", true));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+}
 }

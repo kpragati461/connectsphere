@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.connectsphere.dto.ChangePasswordRequest;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -100,6 +101,22 @@ public UserDetails loadUserByUsername(String username)
 
         return mapToDTO(user, username);
     }
+    public void changePassword(String username, ChangePasswordRequest req) {
+    User user = findByUsername(username);
+
+    if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPassword())) {
+        throw new IllegalArgumentException("Current password is incorrect");
+    }
+
+    user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+    userRepository.save(user);
+    }
+    public void verifyCurrentPassword(String username, String currentPassword) {
+    User user = findByUsername(username);
+    if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+        throw new IllegalArgumentException("Current password is incorrect");
+    }
+}
 
     private UserResponseDTO mapToDTO(User user, String currentUsername) {
     return new UserResponseDTO(
