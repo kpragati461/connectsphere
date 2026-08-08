@@ -145,4 +145,25 @@ public UserDetails loadUserByUsername(String username)
                 .map(u -> mapToDTO(u, username))
                 .collect(Collectors.toList());
     }
+    public List<UserResponseDTO> getFollowers(String username, String currentUsername) {
+    List<String> blocked = blockService.getBlockedUsernames(currentUsername);
+    List<String> blockedBy = blockService.getBlockedByUsernames(currentUsername);
+    return followService.getFollowers(username)
+            .stream()
+            .filter(u -> !blocked.contains(u.getUsername()))
+            .filter(u -> !blockedBy.contains(u.getUsername()))
+            .map(u -> mapToDTO(u, currentUsername))
+            .collect(Collectors.toList());
+}
+
+public List<UserResponseDTO> getFollowingOf(String username, String currentUsername) {
+    List<String> blocked = blockService.getBlockedUsernames(currentUsername);
+    List<String> blockedBy = blockService.getBlockedByUsernames(currentUsername);
+    return followService.getFollowingUsers(username)
+            .stream()
+            .filter(u -> !blocked.contains(u.getUsername()))
+            .filter(u -> !blockedBy.contains(u.getUsername()))
+            .map(u -> mapToDTO(u, currentUsername))
+            .collect(Collectors.toList());
+}
 }

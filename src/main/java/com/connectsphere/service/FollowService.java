@@ -95,4 +95,11 @@ public class FollowService {
         followRepository.findByFollowerAndFollowing(b, a)
                 .ifPresent(followRepository::delete);
     }
+    public List<User> getFollowers(String username) {
+    User user = userService.findByUsername(username);
+    return followRepository.findByFollowing(user)
+            .stream()
+            .map(Follow::getFollower)
+            .collect(Collectors.toList());
+}
 }

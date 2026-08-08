@@ -53,13 +53,14 @@ public class UserController {
                 userDetails.getUsername(), username);
         return ResponseEntity.ok(Map.of("followed", followed));
     }
+
     @GetMapping("/search")
-        public ResponseEntity<List<UserResponseDTO>> searchUsers(
-        @AuthenticationPrincipal UserDetails userDetails,
-        @RequestParam String query) {
-         return ResponseEntity.ok(
-            userService.searchUsers(query, userDetails.getUsername()));
-}
+    public ResponseEntity<List<UserResponseDTO>> searchUsers(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String query) {
+        return ResponseEntity.ok(
+                userService.searchUsers(query, userDetails.getUsername()));
+    }
 
     // NEW — powers the "Share to..." picker (Instagram-style send-to-DM sheet).
     @GetMapping("/following")
@@ -67,5 +68,21 @@ public class UserController {
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(
                 userService.getFollowing(userDetails.getUsername()));
+    }
+
+    @GetMapping("/{username}/followers")
+    public ResponseEntity<List<UserResponseDTO>> getFollowers(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String username) {
+        return ResponseEntity.ok(
+                userService.getFollowers(username, userDetails.getUsername()));
+    }
+
+    @GetMapping("/{username}/following-list")
+    public ResponseEntity<List<UserResponseDTO>> getFollowingList(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String username) {
+        return ResponseEntity.ok(
+                userService.getFollowingOf(username, userDetails.getUsername()));
     }
 }
