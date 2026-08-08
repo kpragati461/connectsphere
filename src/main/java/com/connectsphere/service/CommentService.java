@@ -67,12 +67,13 @@ public class CommentService {
         return commentRepository.countByPost(post);
     }
 
-    private CommentResponseDTO mapToDTO(Comment comment) {
-        return new CommentResponseDTO(
-                comment.getId(),
-                comment.getContent(),
-                comment.getUser().getUsername(),
-                comment.getCreatedAt()
-        );
-    }
+   private CommentResponseDTO mapToDTO(Comment comment) {
+    return new CommentResponseDTO(
+            comment.getId(),
+            comment.getContent(),
+            comment.getUser().getUsername(),
+            comment.getUser().getProfilePhoto(),
+            comment.getCreatedAt()
+    );
+}
 }

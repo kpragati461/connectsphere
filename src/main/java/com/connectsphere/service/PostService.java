@@ -28,15 +28,22 @@ public class PostService {
     private final FollowService followService;
     private final BlockService blockService;
 
-    public PostResponseDTO createPost(String username, CreatePostRequest req) {
-        User user = userService.findByUsername(username);
-        Post post = Post.builder()
-                .content(req.getContent())
-                .mediaUrl(req.getMediaUrl())
-                .user(user)
-                .build();
-        return mapToDTO(postRepository.save(post), username);
+public PostResponseDTO createPost(String username, CreatePostRequest req) {
+    boolean hasContent = req.getContent() != null && !req.getContent().isBlank();
+    boolean hasMedia = req.getMediaUrl() != null && !req.getMediaUrl().isBlank();
+
+    if (!hasContent && !hasMedia) {
+        throw new IllegalArgumentException("Post must have text or media");
     }
+
+    User user = userService.findByUsername(username);
+    Post post = Post.builder()
+            .content(req.getContent())
+            .mediaUrl(req.getMediaUrl())
+            .user(user)
+            .build();
+    return mapToDTO(postRepository.save(post), username);
+}
 
 public List<PostResponseDTO> getFeed(String username) {
     List<String> following = followService.getFollowingUsernames(username);

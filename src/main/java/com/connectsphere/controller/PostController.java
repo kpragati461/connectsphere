@@ -22,13 +22,17 @@ public class PostController {
     private final PostService postService;
     private final BlockService blockService;
 
-    @PostMapping
-    public ResponseEntity<PostResponseDTO> createPost(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CreatePostRequest req) {
+@PostMapping
+public ResponseEntity<?> createPost(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody CreatePostRequest req) {
+    try {
         return ResponseEntity.ok(
                 postService.createPost(userDetails.getUsername(), req));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
+}
 
     @GetMapping("/feed")
     public ResponseEntity<List<PostResponseDTO>> getFeed(

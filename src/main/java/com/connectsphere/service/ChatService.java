@@ -122,16 +122,17 @@ public class ChatService {
     }
 
     private MessageResponseDTO mapToDTO(Message message) {
-        return new MessageResponseDTO(
-                message.getId(),
-                message.getConversation().getId(),
-                message.getSender().getUsername(),
-                message.getContent(),
-                message.isRead(),
-                message.getCreatedAt(),
-                message.getSharedPostId()
-        );
-    }
+    return new MessageResponseDTO(
+            message.getId(),
+            message.getConversation().getId(),
+            message.getSender().getUsername(),
+            message.getSender().getProfilePhoto(),
+            message.getContent(),
+            message.isRead(),
+            message.getCreatedAt(),
+            message.getSharedPostId()
+    );
+}
     public String getOtherUsername(Long conversationId, String currentUsername) {
     Conversation conversation = conversationRepository.findById(conversationId)
             .orElseThrow(() -> new RuntimeException("Conversation not found"));

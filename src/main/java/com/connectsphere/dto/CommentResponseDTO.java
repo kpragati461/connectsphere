@@ -12,5 +12,6 @@ public class CommentResponseDTO {
     private Long id;
     private String content;
     private String username;
+    private String profilePhoto;
     private LocalDateTime createdAt;
 }

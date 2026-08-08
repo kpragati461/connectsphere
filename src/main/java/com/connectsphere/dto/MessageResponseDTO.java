@@ -12,6 +12,7 @@ public class MessageResponseDTO {
     private Long id;
     private Long conversationId;
     private String senderUsername;
+    private String senderProfilePhoto;
     private String content;
     private boolean read;
     private LocalDateTime createdAt;
